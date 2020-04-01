@@ -176,7 +176,7 @@ io.on('connection', function(socket){
     socket.on('sync', function(data, callback) {
         let tempSessionId = data.sessionId;
         if (tempSessionId in sessions) {
-            console.log("Attempting to sync video in session " + tempSessionId);
+            console.log("Attempting to sync video in session " + tempSessionId + " at time: " + data.time);
             lodash.forEach(sessions[tempSessionId].userIds, function(id) {
                 if (id != data.userId) {
                     users[id].socket.emit('sync', data.time);
