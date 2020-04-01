@@ -125,27 +125,6 @@ io.on('connection', function(socket){
         }
     }
 
-    var playvideo = function(newUserId, time) {
-        let tempSessionId = users[newUserId].sessionId;
-        if (tempSessionId != null && tempSessionId in sessions) {
-            console.log('Attempting to play session video at ' + time + ' seconds.');
-            lodash.forEach(sessions[tempSessionId].userIds, function(id) {
-                if (id != newUserId) {
-                    users[id].socket.emit('play', time);
-                }
-            })
-        }
-    }
-
-    var pausevideo = function(newUserId, time) {
-        let tempSessionId = users[newUserId].sessionId;
-        if (tempSessionId != null && tempSessionId in sessions) {
-            console.log('Attempting to pause session video at ' + time + ' seconds.');
-            lodash.forEach(sessions[tempSessionId].userIds, function(id) {
-                users[id].socket.emit('pause', time);
-            })
-        }
-    }
 
     // ---------------------------------------------------------------------------------------------------
 
@@ -182,6 +161,16 @@ io.on('connection', function(socket){
         pausevideo(data.userId, data.time);
         callback("Success");
     });
+
+    socket.on('playpause', function(data, callback) {
+        let tempSessionId = data.sessionId;
+        if (tempSessionId != null && tempSessionId in sessions && sessions[tempSessionId].videoId == data.videoId) {
+            console.log("Attempting to play/pause video in session " + tempSessionId);
+            lodash.forEach(sessions[tempSessionId].userIds, function(id) {
+                users[id].socket.emit('playpause', null);
+            })
+        }
+    })
 
     socket.on('seek', function(data, callback) {
         syncvideo(data.userId, data.time);
