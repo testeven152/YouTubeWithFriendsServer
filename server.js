@@ -77,11 +77,12 @@ io.on('connection', function(socket){
 
     // helper functions ----------------------------------------------------------------------------------
 
-    var createSession = function(newUserId) {
+    var createSession = function(newUserId, videoId) {
         var sessionId = makeId();
         console.log('Attempting to create session with id: ' + sessionId + '...');
         var session = {
             id: sessionId,
+            videoId: videoId,
             userIds: [newUserId]
         };
         sessions[sessionId] = session;
@@ -174,7 +175,7 @@ io.on('connection', function(socket){
 
     // create new sessionid, set user's sessionid to new sessionid
     socket.on('createSession', function(data, callback) {
-        createSession(userId);
+        createSession(data.userId, data.videoId);
         callback(users[userId].sessionId);
     });
 
