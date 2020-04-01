@@ -164,17 +164,26 @@ io.on('connection', function(socket){
 
     socket.on('playpause', function(data, callback) {
         let tempSessionId = data.sessionId;
-        if (tempSessionId != null && tempSessionId in sessions && sessions[tempSessionId].videoId == data.videoId) {
+        if (tempSessionId != null && tempSessionId in sessions) {
             console.log("Attempting to play/pause video in session " + tempSessionId);
             lodash.forEach(sessions[tempSessionId].userIds, function(id) {
                 users[id].socket.emit('playpause', null);
             })
         }
+        callback();
     })
 
-    socket.on('seek', function(data, callback) {
-        syncvideo(data.userId, data.time);
-        callback("Success");
+    socket.on('sync', function(data, callback) {
+        let tempSessionId = data.sessionId;
+        if (tempSessionId in sessions) {
+            console.log("Attempting to sync video in session " + tempSessionId);
+            lodash.forEach(sessions[tempSessionId].userIds, function(id) {
+                if (id != data.userId) {
+                    users[id].socket.emit('sync', data.time);
+                }
+            })
+        }
+        callback();
     });
 
     socket.on('update', function(data, callback) {
