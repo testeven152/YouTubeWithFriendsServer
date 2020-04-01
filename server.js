@@ -1,0 +1,233 @@
+
+
+var app = require('express')();
+var http = require('http').createServer(app);
+var cors = require('cors');
+var io = require('socket.io')(http);
+
+var lodash = require('lodash');
+
+app.use(cors());
+
+// health check
+app.get('/', function(req, res) {
+    res.setHeader('Content-Type', 'text/plain');
+    res.send('OK');
+});
+
+// array to store sessions by session id
+var sessions = {};
+
+// array to store users by user id
+var users = {};
+
+// generate a random ID with 64 bits of entropy
+function makeId() {
+    var result = '';
+    var hexChars = '0123456789abcdef';
+    for (var i = 0; i < 16; i += 1) {
+      result += hexChars[Math.floor(Math.random() * 16)];
+    }
+    return result;
+  }
+
+io.on('connection', function(socket){
+
+    // create userId and send to client --------------------------
+
+    var userId = makeId();
+
+    users[userId] = {
+        id: userId,
+        sessionId: null,
+        socket: socket
+    };
+
+    socket.emit('userId', userId);
+    console.log('User ' + userId + ' connected.');
+
+    // -----------------------------------------------------------
+
+    // testing ---------------------------------------------------
+    // var testuser = "0dd0";
+    // var testsessionid = 0000;
+    // var testsession = {
+    //     id: testsessionid,
+    //     userIds: [],
+    //     video: null
+    // };
+    // users[testuser] = {
+    //     id: testuser,
+    //     sessionId: testsessionid,
+    //     socket: null
+    // }
+    // sessions[testsessionid] = testsession;
+    // sessions[testsessionid].userIds.push(testuser);
+    // sessions[testsessionid].userIds.push("00002223d4444");
+
+    // for (var i = 0; i < sessions[testsessionid].userIds.length; i++) {
+    //     console.log(sessions[testsessionid].userIds[i]);
+    // }
+
+    // sessions[testsessionid].userIds.splice(sessions[testsessionid].userIds.indexOf(testuser), 1);
+
+
+    // console.log(sessions[testsessionid].userIds.length);
+    // testing ---------------------------------------------------
+
+    // helper functions ----------------------------------------------------------------------------------
+
+    var createSession = function(newUserId) {
+        var sessionId = makeId();
+        console.log('Attempting to create session with id: ' + sessionId + '...');
+        var session = {
+            id: sessionId,
+            userIds: [newUserId]
+        };
+        sessions[sessionId] = session;
+        users[newUserId].sessionId = sessionId;
+        console.log('User ' + users[newUserId].id + ' has created session: ' + sessions[sessionId].id + '.');
+
+    }
+
+    var removeUserFromSession = function(newUserId) {
+        let tempSessionId = users[newUserId].sessionId;
+        if (tempSessionId != null) {
+            console.log('Attempting to remove user ' + newUserId + ' from session ' + tempSessionId + '...');
+            lodash.pull(sessions[tempSessionId].userIds, newUserId);
+            users[newUserId].sessionId = null;
+            if (sessions[tempSessionId].userIds.length == 0) {
+                delete sessions[tempSessionId];
+                console.log('session ' + tempSessionId + ' deleted since no users are in session');
+            }
+        } else {
+            console.log('User ' + newUserId + ' had no session.');
+        }
+    }
+
+    var addUserToSession = function(newUserId, sessionIdFromClient) {
+        console.log("Attempting to add user " + newUserId + " to session " + sessionIdFromClient + "...");
+        users[newUserId].sessionId = sessionIdFromClient;
+        sessions[sessionIdFromClient].userIds.push(newUserId);
+    }
+
+
+    var syncvideo = function(newUserId, time) {
+        let tempSessionId = users[newUserId].sessionId;
+        console.log('Attempting to sync session video at ' + time + ' seconds.');
+        lodash.forEach(sessions[tempSessionId].userIds, function(id) {
+            if (id != newUserId) {
+                users[id].socket.emit('sync', time);
+            }
+        });
+        // for (let i = 0; i < sessions[tempSessionId].userIds.length; ++i) {
+        //     if (sessions[tempSessionId].userIds[i] != newUserId) {
+        //         users[sessions[tempSessionId].userIds[i]].socket.emit('sync', time);
+        //     }
+        // }
+    }
+
+    var playvideo = function(newUserId, time) {
+        let tempSessionId = users[newUserId].sessionId;
+        console.log('Attempting to play session video at ' + time + ' seconds.');
+        lodash.forEach(sessions[tempSessionId].userIds, function(id) {
+            if (id != newUserId) {
+                users[id].socket.emit('play', time);
+            }
+        })
+        // for (let i = 0; i < sessions[tempSessionId].userIds.length; ++i) {
+        //     if (sessions[tempSessionId].userIds[i] != newUserId) {
+        //         users[sessions[tempSessionId].userIds[i]].socket.emit('play', time);
+        //     }
+        // }
+    }
+
+    var pausevideo = function(newUserId, time) {
+        let tempSessionId = users[newUserId].sessionId;
+        console.log('Attempting to pause session video at ' + time + ' seconds.');
+        lodash.forEach(sessions[tempSessionId].userIds, function(id) {
+            users[id].socket.emit('pause', time);
+        })
+        // for (let i = 0; i < sessions[tempSessionId].userIds.length; ++i) {
+        //     if (sessions[tempSessionId].userIds[i] != newUserId) {
+        //         users[sessions[tempSessionId].userIds[i]].socket.emit('pause', time);
+        //     }
+        // }
+    }
+
+    var checkSessions = function() {
+        console.log('Checking sessions...');
+        if (sessions.length == 0) {
+            console.log('There are no sessions available');
+        } else {
+            for (let i = 0; i < sessions.length; i++) {
+                try {
+                    console.log(sessions[i].id);
+                } catch(error) {
+                    console.log(error);
+                }
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------------------
+
+    // create new sessionid, set user's sessionid to new sessionid
+    socket.on('createSession', function(data, callback) {
+        createSession(userId);
+        callback(users[userId].sessionId);
+    });
+
+    //set sessionid to sessionid provided by user in client. 
+    socket.on('joinSession', function(data, callback) {
+        if (data.sessionId in sessions) {
+            addUserToSession(userId, data.sessionId);
+            callback(users[userId].sessionId);
+            console.log('User ' + userId +  ' has joined session: ' + data.sessionId + '.');
+        } else {
+            callback('00000');
+            console.log('User ' + userId + ' tried to join invalid session.');
+        }
+    });
+
+    socket.on('leaveSession', function(data, callback) {
+        console.log('User ' + userId + ' left session ' + users[userId].sessionId);
+        removeUserFromSession(userId);
+        callback('00000');
+    })
+
+    socket.on('play', function(data, callback) {
+        playvideo(data.userId, data.time);
+        callback("Success");
+    });
+
+    socket.on('pause', function(data, callback) {
+        pausevideo(data.userId, data.time);
+        callback("Success");
+    });
+
+    socket.on('seek', function(data, callback) {
+        syncvideo(data.userId, data.time);
+        callback("Success");
+    });
+
+    socket.on('update', function(data, callback) {
+        // will be new playpausesync
+
+
+        lodash.forEach(sessions[users[data.userId].sessionId].userIds, function(id) {
+
+        })
+    });
+
+    // delete user of user list; if there are no users left in session, delete the session
+    socket.on('disconnect', function() { 
+        removeUserFromSession(userId);
+        console.log('User ' + userId + ' disconnected.');
+        delete users[userId];
+    });
+});
+
+http.listen(process.env.PORT || 3000, function(){
+    console.log('Listening on port %d.', http.address().port);
+});
