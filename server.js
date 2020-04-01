@@ -115,31 +115,36 @@ io.on('connection', function(socket){
 
     var syncvideo = function(newUserId, time) {
         let tempSessionId = users[newUserId].sessionId;
-        console.log('Attempting to sync session video at ' + time + ' seconds.');
-        lodash.forEach(sessions[tempSessionId].userIds, function(id) {
-            if (id != newUserId) {
-                users[id].socket.emit('sync', time);
-            }
-        });
-
+        if (tempSessionId != null && tempSessionId in sessions) {
+            console.log('Attempting to sync session video at ' + time + ' seconds.');
+            lodash.forEach(sessions[tempSessionId].userIds, function(id) {
+                if (id != newUserId) {
+                    users[id].socket.emit('sync', time);
+                }
+            });
+        }
     }
 
     var playvideo = function(newUserId, time) {
         let tempSessionId = users[newUserId].sessionId;
-        console.log('Attempting to play session video at ' + time + ' seconds.');
-        lodash.forEach(sessions[tempSessionId].userIds, function(id) {
-            if (id != newUserId) {
-                users[id].socket.emit('play', time);
-            }
-        })
+        if (tempSessionId != null && tempSessionId in sessions) {
+            console.log('Attempting to play session video at ' + time + ' seconds.');
+            lodash.forEach(sessions[tempSessionId].userIds, function(id) {
+                if (id != newUserId) {
+                    users[id].socket.emit('play', time);
+                }
+            })
+        }
     }
 
     var pausevideo = function(newUserId, time) {
         let tempSessionId = users[newUserId].sessionId;
-        console.log('Attempting to pause session video at ' + time + ' seconds.');
-        lodash.forEach(sessions[tempSessionId].userIds, function(id) {
-            users[id].socket.emit('pause', time);
-        })
+        if (tempSessionId != null && tempSessionId in sessions) {
+            console.log('Attempting to pause session video at ' + time + ' seconds.');
+            lodash.forEach(sessions[tempSessionId].userIds, function(id) {
+                users[id].socket.emit('pause', time);
+            })
+        }
     }
 
     // ---------------------------------------------------------------------------------------------------
