@@ -130,8 +130,12 @@ io.on('connection', function(socket){
 
     // create new sessionid, set user's sessionid to new sessionid
     socket.on('createSession', function(data, callback) {
-        createSession(data.userId, data.videoId);
-        callback({ sessionId: users[data.userId].sessionId });
+        if (data.userId in users) {
+            createSession(data.userId, data.videoId);
+            callback({ sessionId: users[data.userId].sessionId });
+        } else {
+            callback({});
+        }
     });
 
     //set sessionid to sessionid provided by user in client. 
