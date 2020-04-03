@@ -136,7 +136,7 @@ io.on('connection', function(socket){
 
     //set sessionid to sessionid provided by user in client. 
     socket.on('joinSession', function(data, callback) {
-        if (data.sessionId in sessions && data.videoId == sessions[data.sessionId].videoId) {
+        if (data.sessionId in sessions) {
             addUserToSession(data.userId, data.sessionId);
             callback({ sessionId: users[data.userId].sessionId });
             console.log('User ' + data.userId +  ' has joined session: ' + data.sessionId + '.');
