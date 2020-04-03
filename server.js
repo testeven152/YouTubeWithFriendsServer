@@ -147,8 +147,10 @@ io.on('connection', function(socket){
     });
 
     socket.on('leaveSession', function(data, callback) {
-        console.log('User ' + data.userId + ' left session ' + users[data.userId].sessionId);
-        removeUserFromSession(data.userId);
+        if (data.userId in users) {
+            console.log('User ' + data.userId + ' left session ' + users[data.userId].sessionId);
+            removeUserFromSession(data.userId);
+        }
         callback({});
     })
 
