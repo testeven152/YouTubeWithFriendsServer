@@ -158,16 +158,6 @@ io.on('connection', function(socket){
         callback({});
     })
 
-    socket.on('play', function(data, callback) {
-        playvideo(data.userId, data.time);
-        callback({});
-    });
-
-    socket.on('pause', function(data, callback) {
-        pausevideo(data.userId, data.time);
-        callback({});
-    });
-
     socket.on('playpause', function(data, callback) {
         let tempSessionId = data.sessionId;
         if (tempSessionId != null && tempSessionId in sessions) {
