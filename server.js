@@ -131,17 +131,17 @@ io.on('connection', function(socket){
     // create new sessionid, set user's sessionid to new sessionid
     socket.on('createSession', function(data, callback) {
         createSession(data.userId, data.videoId);
-        callback(users[data.userId].sessionId);
+        callback({ sessionId: users[data.userId].sessionId });
     });
 
     //set sessionid to sessionid provided by user in client. 
     socket.on('joinSession', function(data, callback) {
         if (data.sessionId in sessions) {
             addUserToSession(data.userId, data.sessionId);
-            callback(users[data.userId].sessionId);
+            callback({ sessionId: users[data.userId].sessionId });
             console.log('User ' + data.userId +  ' has joined session: ' + data.sessionId + '.');
         } else {
-            callback('00000');
+            callback({ sessionId: '00000' });
             console.log('User ' + data.userId + ' tried to join invalid session.');
         }
     });
@@ -149,17 +149,17 @@ io.on('connection', function(socket){
     socket.on('leaveSession', function(data, callback) {
         console.log('User ' + data.userId + ' left session ' + users[data.userId].sessionId);
         removeUserFromSession(data.userId);
-        callback('00000');
+        callback({});
     })
 
     socket.on('play', function(data, callback) {
         playvideo(data.userId, data.time);
-        callback("Success");
+        callback({});
     });
 
     socket.on('pause', function(data, callback) {
         pausevideo(data.userId, data.time);
-        callback("Success");
+        callback({});
     });
 
     socket.on('playpause', function(data, callback) {
@@ -170,7 +170,7 @@ io.on('connection', function(socket){
                 users[id].socket.emit('playpause', null);
             })
         }
-        callback();
+        callback({});
     })
 
     socket.on('sync', function(data, callback) {
@@ -183,7 +183,7 @@ io.on('connection', function(socket){
                 }
             })
         }
-        callback();
+        callback({});
     });
 
     socket.on('update', function(data, callback) {
