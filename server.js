@@ -158,6 +158,7 @@ io.on('connection', function(socket){
         callback({});
     })
 
+
     socket.on('playpause', function(data, callback) {
         let tempSessionId = data.sessionId;
         if (tempSessionId != null && tempSessionId in sessions) {
@@ -184,11 +185,16 @@ io.on('connection', function(socket){
 
     socket.on('update', function(data, callback) {
         // will be new playpausesync
+        let tempSessionId = users[data.userId].sessionId
+        if (tempSessionId in sessions) { // if user has session and is a valid session...
+            lodash.forEach(sessions[users[data.userId].sessionId].userIds, function(id) {
+                if (id != data.userId) {
+                    users[id].socket.emit('update', data);
+                }
+            })
+        }
 
-
-        lodash.forEach(sessions[users[data.userId].sessionId].userIds, function(id) {
-
-        })
+        callback({});
     });
 
     // delete user of user list; if there are no users left in session, delete the session
