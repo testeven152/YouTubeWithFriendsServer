@@ -188,7 +188,9 @@ io.on('connection', function(socket){
         let tempSessionId = users[data.userId].sessionId
         if (tempSessionId in sessions) { // if user has session and is a valid session...
             lodash.forEach(sessions[users[data.userId].sessionId].userIds, function(id) {
+                console.log("update");
                 if (id != data.userId) {
+                    console.log("Update triggered by " + data.userId)
                     users[id].socket.emit('update', data);
                 }
             })
