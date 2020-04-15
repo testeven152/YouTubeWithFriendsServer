@@ -152,7 +152,7 @@ io.on('connection', function(socket){
             callback({ sessionId: data.sessionId, videoId: sessions[data.sessionId].videoId });
             console.log('User ' + data.userId +  ' has joined session: ' + data.sessionId + '.');
         } else {
-            callback({ sessionId: '00000' });
+            callback({ errorMessage: "Invalid Session" });
             console.log('User ' + data.userId + ' tried to join invalid session.');
         }
     });
