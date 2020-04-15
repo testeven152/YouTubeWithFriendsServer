@@ -121,17 +121,17 @@ io.on('connection', function(socket){
     }
 
 
-    var syncvideo = function(newUserId, time) {
-        let tempSessionId = users[newUserId].sessionId;
-        if (tempSessionId != null && tempSessionId in sessions) {
-            console.log('Attempting to sync session video at ' + time + ' seconds.');
-            lodash.forEach(sessions[tempSessionId].userIds, function(id) {
-                if (id != newUserId) {
-                    users[id].socket.emit('sync', time);
-                }
-            });
-        }
-    }
+    // var syncvideo = function(newUserId, time) {
+    //     let tempSessionId = users[newUserId].sessionId;
+    //     if (tempSessionId != null && tempSessionId in sessions) {
+    //         console.log('Attempting to sync session video at ' + time + ' seconds.');
+    //         lodash.forEach(sessions[tempSessionId].userIds, function(id) {
+    //             if (id != newUserId) {
+    //                 users[id].socket.emit('sync', time);
+    //             }
+    //         });
+    //     }
+    // }
 
 
     // ---------------------------------------------------------------------------------------------------
@@ -198,7 +198,6 @@ io.on('connection', function(socket){
         if(tempSessionId in sessions) { // if user has session and is a valid session...
             lodash.forEach(sessions[users[data.userId].sessionId].userIds, function(id) {
                 if (id != data.userId) {
-                    console.log("Update triggered by " + data.userId)
                     users[id].socket.emit('update', data);
                 }
             })
