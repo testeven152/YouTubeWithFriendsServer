@@ -112,8 +112,10 @@ io.on('connection', function(socket){
             users[newUserId].sessionId = sessionIdFromClient;
             sessions[sessionIdFromClient].userIds.push(newUserId);
             console.log("Added user %s to session %s.", newUserId, sessionIdFromClient)
+            return true;
         } else {
             console.log("User %s not found.", newUserId);
+            return false;
         }
 
     }
@@ -146,8 +148,7 @@ io.on('connection', function(socket){
 
     //set sessionid to sessionid provided by user in client. 
     socket.on('joinSession', function(data, callback) {
-        if (data.sessionId in sessions) {
-            addUserToSession(data.userId, data.sessionId);
+        if (data.sessionId in sessions && addUserToSession(data.userId, data.sessionId)) {
             callback({ sessionId: data.sessionId, videoId: sessions[data.sessionId].videoId });
             console.log('User ' + data.userId +  ' has joined session: ' + data.sessionId + '.');
         } else {
@@ -165,29 +166,29 @@ io.on('connection', function(socket){
     })
 
 
-    socket.on('playpause', function(data, callback) {
-        let tempSessionId = data.sessionId;
-        if (tempSessionId != null && tempSessionId in sessions) {
-            console.log("Attempting to play/pause video in session " + tempSessionId);
-            lodash.forEach(sessions[tempSessionId].userIds, function(id) {
-                users[id].socket.emit('playpause', null);
-            })
-        }
-        callback({});
-    })
+    // socket.on('playpause', function(data, callback) {
+    //     let tempSessionId = data.sessionId;
+    //     if (tempSessionId != null && tempSessionId in sessions) {
+    //         console.log("Attempting to play/pause video in session " + tempSessionId);
+    //         lodash.forEach(sessions[tempSessionId].userIds, function(id) {
+    //             users[id].socket.emit('playpause', null);
+    //         })
+    //     }
+    //     callback({});
+    // })
 
-    socket.on('sync', function(data, callback) {
-        let tempSessionId = data.sessionId;
-        if (tempSessionId in sessions) {
-            console.log("Attempting to sync video in session " + tempSessionId + " at time: " + data.time);
-            lodash.forEach(sessions[tempSessionId].userIds, function(id) {
-                if (id != data.userId) {
-                    users[id].socket.emit('sync', data.time);
-                }
-            })
-        }
-        callback({});
-    });
+    // socket.on('sync', function(data, callback) {
+    //     let tempSessionId = data.sessionId;
+    //     if (tempSessionId in sessions) {
+    //         console.log("Attempting to sync video in session " + tempSessionId + " at time: " + data.time);
+    //         lodash.forEach(sessions[tempSessionId].userIds, function(id) {
+    //             if (id != data.userId) {
+    //                 users[id].socket.emit('sync', data.time);
+    //             }
+    //         })
+    //     }
+    //     callback({});
+    // });
 
     socket.on('update', function(data, callback) {
         // will be new playpausesync
