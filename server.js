@@ -108,8 +108,14 @@ io.on('connection', function(socket){
 
     var addUserToSession = function(newUserId, sessionIdFromClient) {
         console.log("Attempting to add user " + newUserId + " to session " + sessionIdFromClient + "...");
-        users[newUserId].sessionId = sessionIdFromClient;
-        sessions[sessionIdFromClient].userIds.push(newUserId);
+        if (newUserId in users) {
+            users[newUserId].sessionId = sessionIdFromClient;
+            sessions[sessionIdFromClient].userIds.push(newUserId);
+            console.log("Added user %s to session %s.", newUserId, sessionIdFromClient)
+        } else {
+            console.log("User %s not found.", newUserId);
+        }
+
     }
 
 
