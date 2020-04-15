@@ -186,12 +186,9 @@ io.on('connection', function(socket){
     socket.on('update', function(data, callback) {
         // will be new playpausesync
         let tempSessionId = users[data.userId].sessionId
-        console.log("Update Information");
-        console.log("Owner userId: " + data.userId);
-        console.log("currentTime: " + data.currentTime);
-        console.log("playing: " + data.playing);
-        console.log("videoId: " + data.videoId);
-        if (tempSessionId in sessions) { // if user has session and is a valid session...
+        console.log("------Update Information------\nOwner userId: %s\ncurrentTime: %f\nplaying: %s\nvideoId: %s\n", data.userId, data.currentTime, data.playing, data.videoId);
+
+        if(tempSessionId in sessions) { // if user has session and is a valid session...
             lodash.forEach(sessions[users[data.userId].sessionId].userIds, function(id) {
                 if (id != data.userId) {
                     console.log("Update triggered by " + data.userId)
