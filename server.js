@@ -88,11 +88,17 @@ io.on('connection', function(socket){
         sessions[sessionId] = session;
         users[newUserId].sessionId = sessionId;
         console.log('User ' + users[newUserId].id + ' has created session: ' + sessions[sessionId].id + '.');
-
+        return true;
     }
 
     var removeUserFromSession = function(newUserId) {
-        let tempSessionId = users[newUserId].sessionId;
+
+        var tempSessionId = null;
+
+        if (newUserId in users) {
+            tempSessionId = user[newUserId].sessionId;
+        }
+
         if (tempSessionId != null) {
             console.log('Attempting to remove user ' + newUserId + ' from session ' + tempSessionId + '...');
             lodash.pull(sessions[tempSessionId].userIds, newUserId);
@@ -101,8 +107,10 @@ io.on('connection', function(socket){
                 delete sessions[tempSessionId];
                 console.log('session ' + tempSessionId + ' deleted since no users are in session');
             }
+            return true;
         } else {
             console.log('User ' + newUserId + ' had no session.');
+            return false;
         }
     }
 
@@ -192,7 +200,13 @@ io.on('connection', function(socket){
 
     socket.on('update', function(data, callback) {
         // will be new playpausesync
-        let tempSessionId = users[data.userId].sessionId
+
+        var tempSessionId = null;
+
+        if(data.userId in users) {
+            tempSessionId = users[data.userId].sessionId
+        }
+
         console.log("------Update Information------\nOwner userId: %s\ncurrentTime: %f\nplaying: %s\nvideoId: %s\n------------------------------", data.userId, data.currentTime, data.playing, data.videoId);
 
         if(tempSessionId in sessions) { // if user has session and is a valid session...
