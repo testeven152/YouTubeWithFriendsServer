@@ -46,6 +46,10 @@ io.on('connection', function(socket){
     socket.emit('userId', userId);
     console.log('User ' + userId + ' connected.');
 
+    socket.on('getUserId', function(data, callback) {
+        callback(userId);
+    })
+
     // -----------------------------------------------------------
 
     // testing ---------------------------------------------------
