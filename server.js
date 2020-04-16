@@ -46,9 +46,9 @@ io.on('connection', function(socket){
     socket.emit('userId', userId);
     console.log('User ' + userId + ' connected.');
 
-    socket.on('getUserId', function(data, callback) {
-        callback(userId);
-    })
+    // socket.on('getUserId', function(data, callback) {
+    //     callback(userId);
+    // })
 
     // -----------------------------------------------------------
 
@@ -160,12 +160,12 @@ io.on('connection', function(socket){
 
     //set sessionid to sessionid provided by user in client. 
     socket.on('joinSession', function(data, callback) {
-        if (data.sessionId in sessions && addUserToSession(data.userId, data.sessionId)) {
+        if (data.sessionId in sessions && addUserToSession(userId, data.sessionId)) {
             callback({ sessionId: data.sessionId, videoId: sessions[data.sessionId].videoId });
-            console.log('User ' + data.userId +  ' has joined session: ' + data.sessionId + '.');
+            console.log('User ' + userId +  ' has joined session: ' + data.sessionId + '.');
         } else {
             callback({ errorMessage: "Invalid Session" });
-            console.log('User ' + data.userId + ' tried to join invalid session.');
+            console.log('User ' + userId + ' tried to join invalid session.');
         }
     });
 
