@@ -96,7 +96,7 @@ io.on('connection', function(socket){
         var tempSessionId = null;
 
         if (newUserId in users) {
-            tempSessionId = user[newUserId].sessionId;
+            tempSessionId = users[newUserId].sessionId;
         }
 
         if (tempSessionId != null) {
