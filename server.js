@@ -104,7 +104,7 @@ io.on('connection', function(socket){
         }
 
         if (tempSessionId != null) {
-            console.log('Attempting to remove user ' + newUserId + ' from session ' + tempSessionId + '...');
+            console.log('Disconnected user ' + newUserId + ' from session ' + tempSessionId + '...');
             lodash.pull(sessions[tempSessionId].userIds, newUserId);
             users[newUserId].sessionId = null;
             if (sessions[tempSessionId].userIds.length == 0) {
@@ -113,7 +113,7 @@ io.on('connection', function(socket){
             }
             return true;
         } else {
-            console.log('User ' + newUserId + ' had no session.');
+            console.log('User ' + newUserId + ' disconnected and had no session.');
             return false;
         }
     }
@@ -224,7 +224,7 @@ io.on('connection', function(socket){
     // delete user of user list; if there are no users left in session, delete the session
     socket.on('disconnect', function() { 
         removeUserFromSession(userId);
-        console.log('User ' + userId + ' disconnected.');
+        // console.log('User ' + userId + ' disconnected.');
         delete users[userId];
     });
 });
