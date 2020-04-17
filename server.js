@@ -83,7 +83,7 @@ io.on('connection', function(socket){
 
     var createSession = function(newUserId, videoId) {
         var sessionId = makeId();
-        console.log('Attempting to create session with id: ' + sessionId + '...');
+        // console.log('Attempting to create session with id: ' + sessionId + '...');
         var session = {
             id: sessionId,
             videoId: videoId,
@@ -126,7 +126,7 @@ io.on('connection', function(socket){
             console.log("Added user %s to session %s.", newUserId, sessionIdFromClient)
             return true;
         } else {
-            console.log("User %s not found.", newUserId);
+            console.log("User %s tried to join invalid session", newUserId);
             return false;
         }
 
@@ -162,16 +162,13 @@ io.on('connection', function(socket){
     socket.on('joinSession', function(data, callback) {
         if (data.sessionId in sessions && addUserToSession(userId, data.sessionId)) {
             callback({ sessionId: data.sessionId, videoId: sessions[data.sessionId].videoId });
-            console.log('User ' + userId +  ' has joined session: ' + data.sessionId + '.');
         } else {
             callback({ errorMessage: "Invalid Session" });
-            console.log('User ' + userId + ' tried to join invalid session.');
         }
     });
 
     socket.on('leaveSession', function(data, callback) {
         if (userId in users) {
-            console.log('User ' + userId + ' left session ' + users[userId].sessionId);
             removeUserFromSession(userId);
         }
         callback({});
@@ -211,7 +208,7 @@ io.on('connection', function(socket){
             tempSessionId = users[userId].sessionId
         }
 
-        console.log("------Update Information------\nOwner userId: %s\ncurrentTime: %f\nplaying: %s\nvideoId: %s\n------------------------------", data.userId, data.currentTime, data.playing, data.videoId);
+        console.log("------Update Information------\nOwner userId: %s\ncurrentTime: %f\nplaying: %s\nvideoId: %s\n------------------------------", userId, data.currentTime, data.playing, data.videoId);
 
         if(tempSessionId in sessions) { // if user has session and is a valid session...
             lodash.forEach(sessions[users[userId].sessionId].userIds, function(id) {
