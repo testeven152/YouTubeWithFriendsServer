@@ -151,8 +151,8 @@ io.on('connection', function(socket){
     // create new sessionid, set user's sessionid to new sessionid
     socket.on('createSession', function(data, callback) {
         if (data.userId in users) {
-            createSession(data.userId, data.videoId);
-            callback({ sessionId: users[data.userId].sessionId });
+            createSession(userId, data.videoId);
+            callback({ sessionId: users[userId].sessionId });
         } else {
             callback({});
         }
@@ -170,9 +170,9 @@ io.on('connection', function(socket){
     });
 
     socket.on('leaveSession', function(data, callback) {
-        if (data.userId in users) {
-            console.log('User ' + data.userId + ' left session ' + users[data.userId].sessionId);
-            removeUserFromSession(data.userId);
+        if (userId in users) {
+            console.log('User ' + userId + ' left session ' + users[userId].sessionId);
+            removeUserFromSession(userId);
         }
         callback({});
     })
@@ -207,15 +207,15 @@ io.on('connection', function(socket){
 
         var tempSessionId = null;
 
-        if(data.userId in users) {
-            tempSessionId = users[data.userId].sessionId
+        if(userId in users) {
+            tempSessionId = users[userId].sessionId
         }
 
         console.log("------Update Information------\nOwner userId: %s\ncurrentTime: %f\nplaying: %s\nvideoId: %s\n------------------------------", data.userId, data.currentTime, data.playing, data.videoId);
 
         if(tempSessionId in sessions) { // if user has session and is a valid session...
-            lodash.forEach(sessions[users[data.userId].sessionId].userIds, function(id) {
-                if (id != data.userId) {
+            lodash.forEach(sessions[users[userId].sessionId].userIds, function(id) {
+                if (id != userId) {
                     users[id].socket.emit('update', data);
                 }
             })
