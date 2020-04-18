@@ -18,7 +18,9 @@ app.get('/', function(req, res) {
 // random avatar string to assign to each user
 var randomAvatars = ['Panda', 'Lemur', 'Cow', 'Chicken', 'Pig', 'Giraffe', 'Penguin', 'Goose', 'Turtle', 'Rabbit', 'Lion', 'Cheetah', 'Hyena', 'Elephant', 'Dolphin', 'Koala', 'Dog', 'Cat', 'Mouse', 'Snake', 'Bee',
 'Parrot', 'Eagle', 'Zebra', 'Seal', 'Fox', 'Capybara', 'Meerkat', 'Chameleon', 'Goldfish', 'Carp', 'Bass', 'Tuna', 'Salmon', 'Rhino', 'Hippopotamus', 'Bear', 'Falcon', 'Black-Widow', 'Crab', 'Lobster', 'Owl', 'Sloth',
-'Hamster', 'Hedgehog', 'Anteater', 'Otter', 'Chinchilla', 'Pony', 'Puffin', 'Crocodile', 'Alligator', 'Duck', 'Deer', 'Octopus', 'Squid', 'Lamb', 'Goat', 'Walrus', 'Skunk', 'Possum', 'Leopard', 'Buffalo', 'Tiger', 'Wizard'];
+'Hamster', 'Hedgehog', 'Anteater', 'Otter', 'Chinchilla', 'Pony', 'Puffin', 'Crocodile', 'Alligator', 'Duck', 'Deer', 'Octopus', 'Squid', 'Lamb', 'Goat', 'Walrus', 'Skunk', 'Possum', 'Leopard', 'Buffalo', 'Tiger', 'Wizard',
+'Pitbull', 'Corgi', 'Maltese', 'Golden Retriever', 'Poodle', 'Chihuahua', 'Kitten', 'Horse', 'Tortoise', 'Hare', 'Scallop', 'Orangutan', 'Ocelot', 'Wolf', 'Maggot', 'Fly', 'Wasp', 'Hornet', 'Honey', 'Teemo', 'Villager',
+'Surfer', 'Human', 'BigFoot', 'German Shepherd', 'Bulldog', 'Labrador', 'Beagle', 'Yorkshire Terrier', 'Pug', 'Husky', 'Boxer', 'Rottweiler', 'Pomeranian', 'Shih Tzu', 'Dobermann', 'Shiba Inu', 'Basset Hound', 'Bloodhound'];
 
 // array to store sessions by session id
 var sessions = {};
@@ -38,8 +40,10 @@ function makeId() {
 
 function getRandomAvatar() {
     let numAvatars = randomAvatars.length;
+
     let random = Math.floor(Math.random() * numAvatars);
-    return randomAvatars[random];
+    
+    return randomAvatars[random]
 }
 
 io.on('connection', function(socket){
@@ -124,6 +128,14 @@ io.on('connection', function(socket){
             if (sessions[tempSessionId].userIds.length == 0) {
                 delete sessions[tempSessionId];
                 console.log('session ' + tempSessionId + ' deleted since no users are in session');
+            } 
+            else {
+                // message other users this user has left.
+                lodash.forEach(sessions[tempSessionId].userIds, function(id) {
+                    if (id != newUserId) {
+                        users[id].socket.emit('message', { type: 'left', avatar: users[newUserId].avatar });
+                    }
+                })
             }
             return true;
         } else {
@@ -137,6 +149,14 @@ io.on('connection', function(socket){
         if (newUserId in users) {
             users[newUserId].sessionId = sessionIdFromClient;
             sessions[sessionIdFromClient].userIds.push(newUserId);
+
+            // message other users in session the user has joined
+            lodash.forEach(sessions[sessionIdFromClient].userIds, function(id) {
+                if (id != newUserId) {
+                    users[id].socket.emit('message', { type: 'joined', avatar: users[newUserId].avatar });
+                }
+            })
+
             console.log("Added user %s to session %s.", newUserId, sessionIdFromClient)
             return true;
         } else {
