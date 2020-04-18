@@ -15,6 +15,7 @@ app.get('/', function(req, res) {
     res.send('OK');
 });
 
+// random avatar string to assign to each user
 var randomAvatars = ['Panda', 'Lemur', 'Cow', 'Chicken', 'Pig', 'Giraffe', 'Penguin', 'Goose', 'Turtle', 'Rabbit', 'Lion', 'Cheetah', 'Hyena', 'Elephant', 'Dolphin', 'Koala', 'Dog', 'Cat', 'Mouse', 'Snake', 'Bee',
 'Parrot', 'Eagle', 'Zebra', 'Seal', 'Fox', 'Capybara', 'Meerkat', 'Chameleon', 'Goldfish', 'Carp', 'Bass', 'Tuna', 'Salmon', 'Rhino', 'Hippopotamus', 'Bear', 'Falcon', 'Black-Widow', 'Crab', 'Lobster', 'Owl', 'Sloth',
 'Hamster', 'Hedgehog', 'Anteater', 'Otter', 'Chinchilla', 'Pony', 'Puffin', 'Crocodile', 'Alligator', 'Duck', 'Deer', 'Octopus', 'Squid', 'Lamb', 'Goat', 'Walrus', 'Skunk', 'Possum', 'Leopard', 'Buffalo', 'Tiger', 'Wizard'];
@@ -55,6 +56,8 @@ io.on('connection', function(socket){
     };
 
     socket.emit('userId', userId);
+    socket.emit('avatar', users[userId].avatar);
+
     console.log('User ' + userId + ' connected.');
 
     // socket.on('getUserId', function(data, callback) {
