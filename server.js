@@ -109,6 +109,7 @@ io.on('connection', function(socket){
         };
         sessions[sessionId] = session;
         users[newUserId].sessionId = sessionId;
+        users[newUserId].socket.emit('message', { type: 'created', avatar: user[newUserId].avatar })
         console.log('User ' + users[newUserId].id + ' has created session: ' + sessions[sessionId].id + '.');
         return true;
     }
@@ -132,9 +133,7 @@ io.on('connection', function(socket){
             else {
                 // message other users this user has left.
                 lodash.forEach(sessions[tempSessionId].userIds, function(id) {
-                    if (id != newUserId) {
-                        users[id].socket.emit('message', { type: 'left', avatar: users[newUserId].avatar });
-                    }
+                    users[id].socket.emit('message', { type: 'left', avatar: users[newUserId].avatar });
                 })
             }
             return true;
@@ -152,9 +151,7 @@ io.on('connection', function(socket){
 
             // message other users in session the user has joined
             lodash.forEach(sessions[sessionIdFromClient].userIds, function(id) {
-                if (id != newUserId) {
-                    users[id].socket.emit('message', { type: 'joined', avatar: users[newUserId].avatar });
-                }
+                users[id].socket.emit('message', { type: 'joined', avatar: users[newUserId].avatar });
             })
 
             console.log("Added user %s to session %s.", newUserId, sessionIdFromClient)
