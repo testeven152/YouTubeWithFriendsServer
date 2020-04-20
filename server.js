@@ -109,7 +109,7 @@ io.on('connection', function(socket){
         };
         sessions[sessionId] = session;
         users[newUserId].sessionId = sessionId;
-        users[newUserId].socket.emit('message', { type: 'created', avatar: user[newUserId].avatar })
+        users[newUserId].socket.emit('message', { type: 'created', avatar: users[newUserId].avatar })
         console.log('User ' + users[newUserId].id + ' has created session: ' + sessions[sessionId].id + '.');
         return true;
     }
