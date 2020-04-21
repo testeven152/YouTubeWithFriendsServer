@@ -231,17 +231,9 @@ io.on('connection', function(socket){
     // });
 
     socket.on('update', function(data, callback) {
-        // will be new playpausesync
-
-        var tempSessionId = null;
-
-        if(userId in users) {
-            tempSessionId = users[userId].sessionId
-        }
-
         console.log("------Update Information------\nOwner userId: %s\ncurrentTime: %f\nplaying: %s\nvideoId: %s\n------------------------------", userId, data.currentTime, data.playing, data.videoId);
 
-        if(tempSessionId in sessions) { // if user has session and is a valid session...
+        if(userId in users && users[userId].sessionId in sessions) { // if user has session and is a valid session...
             lodash.forEach(sessions[users[userId].sessionId].userIds, function(id) {
                 if (id != userId) {
                     users[id].socket.emit('update', data);
@@ -251,6 +243,14 @@ io.on('connection', function(socket){
 
         callback({});
     });
+
+    socket.on('chatMessage', function(data, callback) { // passes chat message to other users
+        if(userId in users && users[userId].sessionId in sessions) {
+            lodash.forEach(sessions[users[userId].sessionId].userIds, function(id) {
+                users[id].socket.emit('chat-message', data)
+            })
+        }
+    })
 
     // delete user of user list; if there are no users left in session, delete the session
     socket.on('disconnect', function() { 
