@@ -250,6 +250,8 @@ io.on('connection', function(socket){
                 users[id].socket.emit('chat-message', data)
             })
         }
+
+        callback({});
     })
 
     // delete user of user list; if there are no users left in session, delete the session
