@@ -181,7 +181,7 @@ io.on('connection', function(socket){
 
     // create new sessionid, set user's sessionid to new sessionid
     socket.on('createSession', function(data, callback) {
-        if (data.userId in users) {
+        if (userId in users) {
             createSession(userId, data.videoId);
             callback({ sessionId: users[userId].sessionId });
         } else {
