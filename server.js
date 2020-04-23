@@ -132,6 +132,7 @@ io.on('connection', function(socket){
             } 
             else {
                 // message other users this user has left.
+                console.log('Currently %s people in session %s', sessions[tempSessionId].userIds.length, tempSessionId)
                 lodash.forEach(sessions[tempSessionId].userIds, function(id) {
                     users[id].socket.emit('update-message', { type: 'left', avatar: users[newUserId].avatar });
                 })
@@ -154,7 +155,7 @@ io.on('connection', function(socket){
                 users[id].socket.emit('update-message', { type: 'joined', avatar: users[newUserId].avatar });
             })
 
-            console.log("Added user %s to session %s.", newUserId, sessionIdFromClient)
+            console.log("Added user %s to session %s. Currently %s users in session", newUserId, sessionIdFromClient, sessions[sessionIdFromClient].userIds.length)
             return true;
         } else {
             console.log("User %s tried to join invalid session", newUserId);
@@ -231,11 +232,11 @@ io.on('connection', function(socket){
     // });
 
     socket.on('update', function(data, callback) {
-        console.log("------Update Information------\nOwner userId: %s\ncurrentTime: %f\nplaying: %s\nvideoId: %s\n------------------------------", userId, data.currentTime, data.playing, data.videoId);
+        console.log("------Update Information------\nSession ID: %s\nOwner userId: %s\ncurrentTime: %f\nplaying: %s\nvideoId: %s\n------------------------------", users[userId].sessionId, userId, data.currentTime, data.playing, data.videoId);
 
         if(userId in users && users[userId].sessionId in sessions) { // if user has session and is a valid session...
             lodash.forEach(sessions[users[userId].sessionId].userIds, function(id) {
-                if (id != userId) {
+                if (id != userId && id in users) {
                     users[id].socket.emit('update', data);
                 }
             })
@@ -247,7 +248,9 @@ io.on('connection', function(socket){
     socket.on('chatMessage', function(data, callback) { // passes chat message to other users
         if(userId in users && users[userId].sessionId in sessions) {
             lodash.forEach(sessions[users[userId].sessionId].userIds, function(id) {
-                users[id].socket.emit('chat-message', data)
+                if (id in users) {
+                    users[id].socket.emit('chat-message', data)
+                }
             })
         }
 
