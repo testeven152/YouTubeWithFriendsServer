@@ -123,16 +123,15 @@ io.on('connection', function(socket){
         }
 
         if (tempSessionId != null) {
-            console.log('Disconnected user ' + newUserId + ' from session ' + tempSessionId + '...');
             lodash.pull(sessions[tempSessionId].userIds, newUserId);
             users[newUserId].sessionId = null;
             if (sessions[tempSessionId].userIds.length == 0) {
                 delete sessions[tempSessionId];
-                console.log('session ' + tempSessionId + ' deleted since no users are in session');
+                console.log('Disconnected user %s from session %s. Session deleted since there are no users left.', newUserId, tempSessionId);
             } 
             else {
                 // message other users this user has left.
-                console.log('Currently %s people in session %s', sessions[tempSessionId].userIds.length, tempSessionId)
+                console.log('Disconnected user %s from session %s. Currently %s user(s) in session.', newUserId, tempSessionId, sessions[tempSessionId].userIds.length)
                 lodash.forEach(sessions[tempSessionId].userIds, function(id) {
                     users[id].socket.emit('update-message', { type: 'left', avatar: users[newUserId].avatar });
                 })
@@ -155,7 +154,7 @@ io.on('connection', function(socket){
                 users[id].socket.emit('update-message', { type: 'joined', avatar: users[newUserId].avatar });
             })
 
-            console.log("Added user %s to session %s. Currently %s users in session", newUserId, sessionIdFromClient, sessions[sessionIdFromClient].userIds.length)
+            console.log("Added user %s to session %s. Currently %s user(s) in session.", newUserId, sessionIdFromClient, sessions[sessionIdFromClient].userIds.length)
             return true;
         } else {
             console.log("User %s tried to join invalid session", newUserId);
@@ -232,7 +231,7 @@ io.on('connection', function(socket){
     // });
 
     socket.on('update', function(data, callback) {
-        console.log("------Update Information------\nSession ID: %s\nOwner userId: %s\ncurrentTime: %f\nplaying: %s\nvideoId: %s\n------------------------------", users[userId].sessionId, userId, data.currentTime, data.playing, data.videoId);
+        console.log("Update Information -- Session ID: %s -- Owner userId: %s -- currentTime: %f -- playing: %s -- videoId: %s", users[userId].sessionId, userId, data.currentTime, data.playing, data.videoId);
 
         if(userId in users && users[userId].sessionId in sessions) { // if user has session and is a valid session...
             lodash.forEach(sessions[users[userId].sessionId].userIds, function(id) {
