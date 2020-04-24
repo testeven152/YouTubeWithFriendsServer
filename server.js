@@ -133,7 +133,9 @@ io.on('connection', function(socket){
                 // message other users this user has left.
                 console.log('Disconnected user %s from session %s. Currently %s user(s) in session.', newUserId, tempSessionId, sessions[tempSessionId].userIds.length)
                 lodash.forEach(sessions[tempSessionId].userIds, function(id) {
-                    users[id].socket.emit('update-message', { type: 'left', avatar: users[newUserId].avatar });
+                    if (id in users) {
+                        users[id].socket.emit('update-message', { type: 'left', avatar: users[newUserId].avatar }); // problem here where socket is undefined at times..
+                    }
                 })
             }
             return true;
@@ -231,7 +233,7 @@ io.on('connection', function(socket){
     // });
 
     socket.on('update', function(data, callback) {
-        console.log("Update Information -- Session ID: %s -- Owner userId: %s -- currentTime: %f -- playing: %s -- videoId: %s", users[userId].sessionId, userId, data.currentTime, data.playing, data.videoId);
+        console.log("Update Information - Session ID: %s - Users in Session: %s - Owner userId: %s - currentTime: %f - playing: %s", users[userId].sessionId, sessions[users[userId].sessionId].userIds.length, userId, data.currentTime, data.playing, data.videoId);
 
         if(userId in users && users[userId].sessionId in sessions) { // if user has session and is a valid session...
             lodash.forEach(sessions[users[userId].sessionId].userIds, function(id) {
