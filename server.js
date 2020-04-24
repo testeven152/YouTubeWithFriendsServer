@@ -233,7 +233,7 @@ io.on('connection', function(socket){
     // });
 
     socket.on('update', function(data, callback) {
-        console.log("Update Information - Session ID: %s - Owner userId: %s - currentTime: %f - playing: %s", users[userId].sessionId, userId, data.currentTime, data.playing, data.videoId);
+        console.log("Update Information - Session ID: %s - Owner userId: %s - currentTime: %f - playing: %s", users[userId].sessionId, userId, data.currentTime, data.playing);
 
         if(userId in users && users[userId].sessionId in sessions) { // if user has session and is a valid session...
             lodash.forEach(sessions[users[userId].sessionId].userIds, function(id) {
