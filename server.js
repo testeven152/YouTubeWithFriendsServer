@@ -153,7 +153,9 @@ io.on('connection', function(socket){
 
             // message other users in session the user has joined
             lodash.forEach(sessions[sessionIdFromClient].userIds, function(id) {
-                users[id].socket.emit('update-message', { type: 'joined', avatar: users[newUserId].avatar });
+                if (id in users) {
+                    users[id].socket.emit('update-message', { type: 'joined', avatar: users[newUserId].avatar });
+                }
             })
 
             console.log("Added user %s to session %s. Currently %s user(s) in session.", newUserId, sessionIdFromClient, sessions[sessionIdFromClient].userIds.length)
@@ -241,9 +243,13 @@ io.on('connection', function(socket){
                     users[id].socket.emit('update', data);
                 }
             })
+
+            callback({});
+            
+        } else {
+            callback({ errorMessage: "Invalid or NULL Session ID" })
         }
 
-        callback({});
     });
 
     socket.on('chatMessage', function(data, callback) { // passes chat message to other users
