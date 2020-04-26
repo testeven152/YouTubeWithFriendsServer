@@ -189,7 +189,7 @@ io.on('connection', function(socket){
             createSession(userId, data.videoId);
             callback({ sessionId: users[userId].sessionId });
         } else {
-            callback({});
+            callback({ errorMessage: "Could not create session" });
         }
     });
 
@@ -235,9 +235,8 @@ io.on('connection', function(socket){
     // });
 
     socket.on('update', function(data, callback) {
-        console.log("Update Information - Session ID: %s - Owner userId: %s - currentTime: %f - playing: %s", users[userId].sessionId, userId, data.currentTime, data.playing);
-
         if(userId in users && users[userId].sessionId in sessions) { // if user has session and is a valid session...
+            console.log("Update Information - Session ID: %s - Owner userId: %s - currentTime: %f - playing: %s", users[userId].sessionId, userId, data.currentTime, data.playing);
             lodash.forEach(sessions[users[userId].sessionId].userIds, function(id) {
                 if (id != userId && id in users) {
                     users[id].socket.emit('update', data);
@@ -247,6 +246,7 @@ io.on('connection', function(socket){
             callback({});
             
         } else {
+            console.log("Error: Invalid or NULL Session ID")
             callback({ errorMessage: "Invalid or NULL Session ID" })
         }
 
@@ -259,9 +259,12 @@ io.on('connection', function(socket){
                     users[id].socket.emit('chat-message', data)
                 }
             })
+
+            callback({});
+        } else {
+            callback({ errorMessage: "Invalid or NULL Session ID" })
         }
 
-        callback({});
     })
 
     // delete user of user list; if there are no users left in session, delete the session
