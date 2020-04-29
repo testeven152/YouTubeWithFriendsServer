@@ -252,6 +252,23 @@ io.on('connection', function(socket){
 
     });
 
+    socket.on('mouseupdate', function(data, callback) {
+        if(userId in users && users[userId].sessionId in sessions) { // if user has session and is a valid session...
+            console.log("Update Information - Session ID: %s - Owner userId: %s - currentTime: %f - playing: %s", users[userId].sessionId, userId, data.currentTime, data.playing);
+            lodash.forEach(sessions[users[userId].sessionId].userIds, function(id) {
+                if (id != userId && id in users) {
+                    users[id].socket.emit('mouseupdate', data);
+                }
+            })
+
+            callback({});
+            
+        } else {
+            console.log("Error: Invalid or NULL Session ID")
+            callback({ errorMessage: "Invalid or NULL Session ID" })
+        }
+    })
+
     socket.on('chatMessage', function(data, callback) { // passes chat message to other users
         if(userId in users && users[userId].sessionId in sessions) {
             lodash.forEach(sessions[users[userId].sessionId].userIds, function(id) {
