@@ -46,6 +46,10 @@ function getRandomAvatar() {
     return randomAvatars[random]
 }
 
+function convertMillisecondstoSeconds(milliseconds) {
+    return milliseconds / 1000;
+}
+
 io.on('connection', function(socket){
 
     // create userId and send to client --------------------------
@@ -99,13 +103,21 @@ io.on('connection', function(socket){
 
     // helper functions ----------------------------------------------------------------------------------
 
-    var createSession = function(newUserId, videoId) {
+    var createSession = function(newUserId, videoId, controlLock = false, currentTime = null, playingState = null, playbackRate = null) {
         var sessionId = makeId();
         // console.log('Attempting to create session with id: ' + sessionId + '...');
+
+        let master_user = (controlLock) ? newUserId : null;
+
         var session = {
             id: sessionId,
             videoId: videoId,
-            userIds: [newUserId]
+            userIds: [newUserId],
+            masterUser: master_user,
+            recentUpdatedTime: currentTime, 
+            recentPlayingState: playingState,
+            recentPlaybackRate: playbackRate,
+            lastTimeUpdated: convertMillisecondstoSeconds(Date.now())
         };
         sessions[sessionId] = session;
         users[newUserId].sessionId = sessionId;
@@ -167,6 +179,16 @@ io.on('connection', function(socket){
 
     }
 
+    var updateSessionVideoDetails = function(sessionId, time, playing, playbackRate) {
+
+        if (sessionId in sessions) {
+            sessions[sessionId].recentUpdatedTime = time
+            sessions[sessionId].recentPlayingState = playing
+            sessions[sessionId].recentPlaybackRate = playbackRate
+            sessions[sessionId].lastTimeUpdated = convertMillisecondstoSeconds(Date.now())
+        }
+
+    }
 
     // var syncvideo = function(newUserId, time) {
     //     let tempSessionId = users[newUserId].sessionId;
@@ -186,7 +208,7 @@ io.on('connection', function(socket){
     // create new sessionid, set user's sessionid to new sessionid
     socket.on('createSession', function(data, callback) {
         if (userId in users) {
-            createSession(userId, data.videoId);
+            createSession(userId, data.videoId, data.controlLock, data.currentTime, data.playing, data.playbackRate);
             callback({ sessionId: users[userId].sessionId });
         } else {
             callback({ errorMessage: "Could not create session" });
@@ -196,7 +218,14 @@ io.on('connection', function(socket){
     //set sessionid to sessionid provided by user in client. 
     socket.on('joinSession', function(data, callback) {
         if (data.sessionId in sessions && addUserToSession(userId, data.sessionId)) {
-            callback({ sessionId: data.sessionId, videoId: sessions[data.sessionId].videoId });
+            callback({ 
+                sessionId: data.sessionId, 
+                videoId: sessions[data.sessionId].videoId, 
+                recentUpdatedTime: sessions[data.sessionId].recentUpdatedTime, 
+                recentPlayingState: sessions[data.sessionId].recentPlayingState, 
+                recentPlaybackRate: sessions[data.sessionId].recentPlaybackRate, 
+                lastTimeUpdated: sessions[data.sessionId].lastTimeUpdated 
+            });
         } else {
             callback({ errorMessage: "Invalid Session" });
         }
@@ -236,12 +265,21 @@ io.on('connection', function(socket){
 
     socket.on('update', function(data, callback) {
         if(userId in users && users[userId].sessionId in sessions) { // if user has session and is a valid session...
-            console.log("Update Information - Session ID: %s - Owner userId: %s - currentTime: %f - playing: %s", users[userId].sessionId, userId, data.currentTime, data.playing);
-            lodash.forEach(sessions[users[userId].sessionId].userIds, function(id) {
-                if (id != userId && id in users) {
-                    users[id].socket.emit('update', data);
-                }
-            })
+
+            if (sessions[users[userId].sessionId].masterUser == userId || sessions[users[userId].sessionId].masterUser == null) {
+                console.log("Update Information - Session ID: %s - Owner userId: %s - currentTime: %f - playing: %s - playbackrate: %s", users[userId].sessionId, userId, data.currentTime, data.playing, data.playbackRate);
+                lodash.forEach(sessions[users[userId].sessionId].userIds, function(id) {
+                    if (id != userId && id in users) {
+                        users[id].socket.emit('update', data);
+                    }
+                })
+                updateSessionVideoDetails(users[userId].sessionId, data.currentTime, data.playing, data.playbackRate)
+            } else {
+                console.log("non-masterUser %s tried to sync in session %s", userId, users[userId].sessionId)
+                callback({ revert: true })
+            }
+
+            
 
             callback({});
             
@@ -254,12 +292,19 @@ io.on('connection', function(socket){
 
     socket.on('mouseupdate', function(data, callback) {
         if(userId in users && users[userId].sessionId in sessions) { // if user has session and is a valid session...
-            console.log("Update Information - Session ID: %s - Owner userId: %s - currentTime: %f - playing: %s", users[userId].sessionId, userId, data.currentTime, data.playing);
-            lodash.forEach(sessions[users[userId].sessionId].userIds, function(id) {
-                if (id != userId && id in users) {
-                    users[id].socket.emit('mouseupdate', data);
-                }
-            })
+
+            if (sessions[users[userId].sessionId].masterUser == userId || sessions[users[userId].sessionId].masterUser == null) {
+                console.log("Update Information - Session ID: %s - Owner userId: %s - currentTime: %f - playing: %s - playbackrate: %s", users[userId].sessionId, userId, data.currentTime, data.playing, data.playbackRate);
+                lodash.forEach(sessions[users[userId].sessionId].userIds, function(id) {
+                    if (id != userId && id in users) {
+                        users[id].socket.emit('mouseupdate', data);
+                    }
+                })
+                updateSessionVideoDetails(users[userId].sessionId, data.currentTime, data.playing, data.playbackRate)
+            } else {
+                console.log("non-masterUser %s tried to sync in session %s", userId, users[userId].sessionId)
+                callback({ revert: true })
+            }
 
             callback({});
             
