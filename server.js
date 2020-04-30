@@ -103,7 +103,7 @@ io.on('connection', function(socket){
 
     // helper functions ----------------------------------------------------------------------------------
 
-    var createSession = function(newUserId, videoId, controlLock = false, currentTime = null, playingState = null, playbackRate = null) {
+    var createSession = function(newUserId, videoId, controlLock = false, currentTime = 0, playingState = true, playbackRate = 0) {
         var sessionId = makeId();
         // console.log('Attempting to create session with id: ' + sessionId + '...');
 
@@ -276,7 +276,13 @@ io.on('connection', function(socket){
                 updateSessionVideoDetails(users[userId].sessionId, data.currentTime, data.playing, data.playbackRate)
             } else {
                 console.log("non-masterUser %s tried to sync in session %s", userId, users[userId].sessionId)
-                callback({ revert: true })
+                callback({ 
+                    revert: true, 
+                    currentTime: sessions[users[userId].sessionId].recentUpdatedTime,
+                    playing: sessions[users[userId].sessionId].recentPlayingState, 
+                    playbackRate: sessions[users[userId].sessionId].recentPlaybackRate, 
+                    lastTimeUpdated: sessions[users[userId].sessionId].lastTimeUpdated
+                })
             }
 
             
@@ -303,7 +309,13 @@ io.on('connection', function(socket){
                 updateSessionVideoDetails(users[userId].sessionId, data.currentTime, data.playing, data.playbackRate)
             } else {
                 console.log("non-masterUser %s tried to sync in session %s", userId, users[userId].sessionId)
-                callback({ revert: true })
+                callback({ 
+                    revert: true, 
+                    currentTime: sessions[users[userId].sessionId].recentUpdatedTime,
+                    playing: sessions[users[userId].sessionId].recentPlayingState, 
+                    playbackRate: sessions[users[userId].sessionId].recentPlaybackRate, 
+                    lastTimeUpdated: sessions[users[userId].sessionId].lastTimeUpdated
+                })
             }
 
             callback({});
