@@ -68,38 +68,6 @@ io.on('connection', function(socket){
 
     console.log('User ' + userId + ' connected.');
 
-    // socket.on('getUserId', function(data, callback) {
-    //     callback(userId);
-    // })
-
-    // -----------------------------------------------------------
-
-    // testing ---------------------------------------------------
-    // var testuser = "0dd0";
-    // var testsessionid = 0000;
-    // var testsession = {
-    //     id: testsessionid,
-    //     userIds: [],
-    //     video: null
-    // };
-    // users[testuser] = {
-    //     id: testuser,
-    //     sessionId: testsessionid,
-    //     socket: null
-    // }
-    // sessions[testsessionid] = testsession;
-    // sessions[testsessionid].userIds.push(testuser);
-    // sessions[testsessionid].userIds.push("00002223d4444");
-
-    // for (var i = 0; i < sessions[testsessionid].userIds.length; i++) {
-    //     console.log(sessions[testsessionid].userIds[i]);
-    // }
-
-    // sessions[testsessionid].userIds.splice(sessions[testsessionid].userIds.indexOf(testuser), 1);
-
-
-    // console.log(sessions[testsessionid].userIds.length);
-    // testing ---------------------------------------------------
 
     // helper functions ----------------------------------------------------------------------------------
 
@@ -117,7 +85,8 @@ io.on('connection', function(socket){
             recentUpdatedTime: currentTime, 
             recentPlayingState: playingState,
             recentPlaybackRate: playbackRate,
-            lastTimeUpdated: convertMillisecondstoSeconds(Date.now())
+            lastTimeUpdated: convertMillisecondstoSeconds(Date.now()),
+            videoQueue: []
         };
         sessions[sessionId] = session;
         users[newUserId].sessionId = sessionId;
@@ -188,6 +157,27 @@ io.on('connection', function(socket){
             sessions[sessionId].lastTimeUpdated = convertMillisecondstoSeconds(Date.now())
         }
 
+    }
+
+    var updateAvatar = function(newUserId, newAvatar) {
+
+        // TODO: 
+        // - check if avatar name is taken already in the session. if so, callback error message
+
+        if (newUserId in users) {
+            let oldAvatar = users[newUserId].avatar
+            users[newUserId].avatar = newAvatar
+
+            if (users[newUserId].sessionId in sessions) {
+
+                lodash.forEach(sessions[users[newUserId.sessionId].userIds], function(id) {
+                    if (id in users) {
+                        users[id].socket.emit('updateAvatar-Message', { oldAvatar: oldAvatar, newAvatar: newAvatar })
+                    }
+                })
+
+            }
+        }
     }
 
     // var syncvideo = function(newUserId, time) {
@@ -339,6 +329,12 @@ io.on('connection', function(socket){
             callback({ errorMessage: "Invalid or NULL Session ID" })
         }
 
+    })
+
+    socket.on('updateAvatar', function(data) {
+        updateAvatar(userId, data.avatar)
+        console.log('User %s changed avatar to %s', userId, data.avatar)
+        callback({})
     })
 
     // delete user of user list; if there are no users left in session, delete the session
