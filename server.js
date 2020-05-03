@@ -331,7 +331,7 @@ io.on('connection', function(socket){
 
     })
 
-    socket.on('updateAvatar', function(data) {
+    socket.on('updateAvatar', function(data, callback) {
         updateAvatar(userId, data.avatar)
         console.log('User %s changed avatar to %s', userId, data.avatar)
         callback({})
