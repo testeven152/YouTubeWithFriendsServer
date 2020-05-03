@@ -170,7 +170,7 @@ io.on('connection', function(socket){
 
             if (users[newUserId].sessionId in sessions) {
 
-                lodash.forEach(sessions[users[newUserId.sessionId].userIds], function(id) {
+                lodash.forEach(sessions[users[newUserId].sessionId].userIds, function(id) {
                     if (id in users) {
                         users[id].socket.emit('updateAvatar-Message', { oldAvatar: oldAvatar, newAvatar: newAvatar })
                     }
