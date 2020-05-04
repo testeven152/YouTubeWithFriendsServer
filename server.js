@@ -167,12 +167,13 @@ io.on('connection', function(socket){
         if (newUserId in users) {
             let oldAvatar = users[newUserId].avatar
             users[newUserId].avatar = newAvatar
+            let isMasterUser = (sessions[users[newUserId].sessionId].masterUser == newUserId) ? true : false
 
             if (users[newUserId].sessionId in sessions) {
 
                 lodash.forEach(sessions[users[newUserId].sessionId].userIds, function(id) {
                     if (id in users) {
-                        users[id].socket.emit('updateAvatar-Message', { oldAvatar: oldAvatar, newAvatar: newAvatar })
+                        users[id].socket.emit('updateAvatar-Message', { oldAvatar: oldAvatar, newAvatar: newAvatar, isMasterUser: isMasterUser })
                     }
                 })
 
