@@ -167,7 +167,11 @@ io.on('connection', function(socket){
         if (newUserId in users) {
             let oldAvatar = users[newUserId].avatar
             users[newUserId].avatar = newAvatar
-            let isMasterUser = (sessions[users[newUserId].sessionId].masterUser == newUserId) ? true : false
+            let isMasterUser = false
+            
+            if (users[newUserId].sessionId in sessions) {
+                isMasterUser = (sessions[users[newUserId].sessionId].masterUser == newUserId) ? true : false
+            }
 
             if (users[newUserId].sessionId in sessions) {
 
