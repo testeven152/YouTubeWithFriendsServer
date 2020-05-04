@@ -199,10 +199,13 @@ io.on('connection', function(socket){
     socket.on('createSession', function(data, callback) {
         if (userId in users) {
             createSession(userId, data.videoId, data.controlLock, data.currentTime, data.playing, data.playbackRate);
+
+            let masterUserAvatar = (sessions[users[userId].sessionId].masterUser) ? users[sessions[users[userId].sessionId].masterUser].avatar : null
+
             callback({ 
                 sessionId: users[userId].sessionId,
                 avatar: users[userId].avatar, 
-                masterUser: sessions[users[userId].sessionId].masterUser 
+                masterUser: masterUserAvatar
             });
         } else {
             callback({ errorMessage: "Could not create session" });
@@ -212,11 +215,12 @@ io.on('connection', function(socket){
     //set sessionid to sessionid provided by user in client. 
     socket.on('joinSession', function(data, callback) {
         if (data.sessionId in sessions && addUserToSession(userId, data.sessionId)) {
+            let masterUserAvatar = (sessions[users[userId].sessionId].masterUser) ? users[sessions[users[userId].sessionId].masterUser].avatar : null
             callback({ 
                 sessionId: data.sessionId, 
                 videoId: sessions[data.sessionId].videoId,
                 avatar: users[userId].avatar,
-                masterUser: sessions[data.sessionId].masterUser, 
+                masterUser: masterUserAvatar, 
                 recentUpdatedTime: sessions[data.sessionId].recentUpdatedTime, 
                 recentPlayingState: sessions[data.sessionId].recentPlayingState, 
                 recentPlaybackRate: sessions[data.sessionId].recentPlaybackRate, 
