@@ -199,7 +199,11 @@ io.on('connection', function(socket){
     socket.on('createSession', function(data, callback) {
         if (userId in users) {
             createSession(userId, data.videoId, data.controlLock, data.currentTime, data.playing, data.playbackRate);
-            callback({ sessionId: users[userId].sessionId });
+            callback({ 
+                sessionId: users[userId].sessionId,
+                avatar: users[userId].avatar, 
+                masterUser: sessions[users[userId].sessionId].masterUser 
+            });
         } else {
             callback({ errorMessage: "Could not create session" });
         }
@@ -210,7 +214,9 @@ io.on('connection', function(socket){
         if (data.sessionId in sessions && addUserToSession(userId, data.sessionId)) {
             callback({ 
                 sessionId: data.sessionId, 
-                videoId: sessions[data.sessionId].videoId, 
+                videoId: sessions[data.sessionId].videoId,
+                avatar: users[userId].avatar,
+                masterUser: sessions[data.sessionId].masterUser, 
                 recentUpdatedTime: sessions[data.sessionId].recentUpdatedTime, 
                 recentPlayingState: sessions[data.sessionId].recentPlayingState, 
                 recentPlaybackRate: sessions[data.sessionId].recentPlaybackRate, 
