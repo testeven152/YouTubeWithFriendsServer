@@ -168,12 +168,10 @@ io.on('connection', function(socket){
             let oldAvatar = users[newUserId].avatar
             users[newUserId].avatar = newAvatar
             let isMasterUser = false
-            
-            if (users[newUserId].sessionId in sessions) {
-                isMasterUser = (sessions[users[newUserId].sessionId].masterUser == newUserId) ? true : false
-            }
 
             if (users[newUserId].sessionId in sessions) {
+
+                isMasterUser = (sessions[users[newUserId].sessionId].masterUser == newUserId) ? true : false
 
                 lodash.forEach(sessions[users[newUserId].sessionId].userIds, function(id) {
                     if (id in users) {
