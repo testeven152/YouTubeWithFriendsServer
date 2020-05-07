@@ -106,7 +106,7 @@ io.on('connection', function(socket){
 
         if (tempSessionId != null) {
             lodash.pull(sessions[tempSessionId].userIds, newUserId);
-            lodash.pull(sessions[tempSessionId].avatars, users[newUserID].avatar)
+            lodash.pull(sessions[tempSessionId].avatars, users[newUserId].avatar)
             users[newUserId].sessionId = null;
             if (sessions[tempSessionId].userIds.length == 0) {
                 delete sessions[tempSessionId];
