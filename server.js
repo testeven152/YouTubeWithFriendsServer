@@ -81,6 +81,7 @@ io.on('connection', function(socket){
             id: sessionId,
             videoId: videoId,
             userIds: [newUserId],
+            avatars: [users[newUserID].avatar],
             masterUser: master_user,
             recentUpdatedTime: currentTime, 
             recentPlayingState: playingState,
@@ -105,6 +106,7 @@ io.on('connection', function(socket){
 
         if (tempSessionId != null) {
             lodash.pull(sessions[tempSessionId].userIds, newUserId);
+            lodash.pull(sessions[tempSessionId].avatars, users[newUserID].avatar)
             users[newUserId].sessionId = null;
             if (sessions[tempSessionId].userIds.length == 0) {
                 delete sessions[tempSessionId];
@@ -131,6 +133,7 @@ io.on('connection', function(socket){
         if (newUserId in users) {
             users[newUserId].sessionId = sessionIdFromClient;
             sessions[sessionIdFromClient].userIds.push(newUserId);
+            sessions[sessionIdFromClient].avatars.push(users[newUserId].avatar);
 
             // message other users in session the user has joined
             lodash.forEach(sessions[sessionIdFromClient].userIds, function(id) {
@@ -171,30 +174,62 @@ io.on('connection', function(socket){
 
             if (users[newUserId].sessionId in sessions) {
 
+                if (newAvatar in sessions[users[newUserId].sessionId].avatars) {
+                    let count = 1;
+                    while ((newAvatar + "(" + count + ")") in sessions[users[newUserId].sessionId].avatars) {
+                        count++
+                    }
+
+                    users[newUserId].avatar = newAvatar + "(" + count + ")";
+                }
+
                 isMasterUser = (sessions[users[newUserId].sessionId].masterUser == newUserId) ? true : false
 
                 lodash.forEach(sessions[users[newUserId].sessionId].userIds, function(id) {
                     if (id in users) {
-                        users[id].socket.emit('updateAvatar-Message', { oldAvatar: oldAvatar, newAvatar: newAvatar, isMasterUser: isMasterUser })
+                        users[id].socket.emit('updateAvatar-Message', { oldAvatar: oldAvatar, newAvatar: users[newUserId].avatar, isMasterUser: isMasterUser })
                     }
                 })
+
+                lodash.pull(sessions[users[newUserId].sessionId].avatars, oldAvatar)
+                sessions[users[newUserId].sessionId].avatars.push(users[newUserId].avatar);
 
             }
         }
     }
 
-    // var syncvideo = function(newUserId, time) {
-    //     let tempSessionId = users[newUserId].sessionId;
-    //     if (tempSessionId != null && tempSessionId in sessions) {
-    //         console.log('Attempting to sync session video at ' + time + ' seconds.');
-    //         lodash.forEach(sessions[tempSessionId].userIds, function(id) {
-    //             if (id != newUserId) {
-    //                 users[id].socket.emit('sync', time);
-    //             }
-    //         });
-    //     }
-    // }
+    var addVideoToSessionQueue = function(sessionId, videoId) {
+        if (sessionId in sessions) {
+            sessions[sessionId].videoQueue.push(videoId)
+            return sessions[sessionId].videoQueue
+        }
+    }
 
+    var popVideoFromSessionQueue = function(sessionId) {
+        if (sessionId in sessions) {
+            return sessions[sessionId].shift()
+        }
+    }
+
+    var rearrangeVideosFromSessionQueue = function(sessionId, position1, position2) {
+        if (sessionId in sessions) {
+            let temp = sessions[sessionId].videoQueue[position1]
+            sessions[sessionId].videoQueue[position1] = sessions[sessionId].videoQueue[position2]
+            sessions[sessionId].videoQueue[position2] = temp 
+            return sessions[sessionId].videoQueue
+        }
+    }
+
+    var deleteVideoFromSessionQueue = function(sessionId, videoId) {
+        if (sessionId in sessions) {
+            for (var i = 0; i < sessions[sessionId].videoQueue.length; i++) {
+                if (sessions[sessionId].videoQueue[i] == videoId) {
+                    sessions[sessionId].videoQueue.splice(i, 1)
+                    return sessions[sessionId].videoQueue
+                }
+            }
+        }
+    }
 
     // ---------------------------------------------------------------------------------------------------
 
@@ -227,7 +262,8 @@ io.on('connection', function(socket){
                 recentUpdatedTime: sessions[data.sessionId].recentUpdatedTime, 
                 recentPlayingState: sessions[data.sessionId].recentPlayingState, 
                 recentPlaybackRate: sessions[data.sessionId].recentPlaybackRate, 
-                lastTimeUpdated: sessions[data.sessionId].lastTimeUpdated 
+                lastTimeUpdated: sessions[data.sessionId].lastTimeUpdated,
+                avatars: sessions[data.sessionId].avatars
             });
         } else {
             callback({ errorMessage: "Invalid Session" });
@@ -241,30 +277,6 @@ io.on('connection', function(socket){
         callback({});
     })
 
-
-    // socket.on('playpause', function(data, callback) {
-    //     let tempSessionId = data.sessionId;
-    //     if (tempSessionId != null && tempSessionId in sessions) {
-    //         console.log("Attempting to play/pause video in session " + tempSessionId);
-    //         lodash.forEach(sessions[tempSessionId].userIds, function(id) {
-    //             users[id].socket.emit('playpause', null);
-    //         })
-    //     }
-    //     callback({});
-    // })
-
-    // socket.on('sync', function(data, callback) {
-    //     let tempSessionId = data.sessionId;
-    //     if (tempSessionId in sessions) {
-    //         console.log("Attempting to sync video in session " + tempSessionId + " at time: " + data.time);
-    //         lodash.forEach(sessions[tempSessionId].userIds, function(id) {
-    //             if (id != data.userId) {
-    //                 users[id].socket.emit('sync', data.time);
-    //             }
-    //         })
-    //     }
-    //     callback({});
-    // });
 
     socket.on('update', function(data, callback) {
         if(userId in users && users[userId].sessionId in sessions) { // if user has session and is a valid session...
@@ -346,8 +358,34 @@ io.on('connection', function(socket){
 
     socket.on('updateAvatar', function(data, callback) {
         updateAvatar(userId, data.avatar)
-        console.log('User %s changed avatar to %s', userId, data.avatar)
-        callback({})
+        console.log('User %s changed avatar to %s', userId, users[userId].avatar)
+        callback({ avatar: users[userId].avatar })
+    })
+
+
+    // for now as of 05/07/2020, video queue is unused until I can figure out how to navigate through youtube video urls without triggering a refresh
+    socket.on('videoQueue-update', function(data, callback) {
+
+        if (data.updateType == "add-video") {
+            console.log('User %s added video to session %s', userId, users[userId].sessionId)
+            let newQueue = addVideoToSessionQueue(users[userId].sessionId, data.videoId)
+            callback({ videoQueue: newQueue });
+        }
+        else if (data.updateType == "pop-video") {
+            console.log('Retrieving new video in session %s', users[userId].sessionId)
+            let newVideo = popVideoFromSessionQueue(users[userId].sessionId)
+            callback({ newVideoId: newVideo });
+        }
+        else if (data.updateType == "swap-video") {
+            console.log('User %s swapped video positions in queue in session %s', userId, users[userId].sessionId)
+            let newQueue = rearrangeVideosFromSessionQueue(users[userId].sessionId, data.pos1, data.pos2)
+            callback({ videoQueue: newQueue });
+        }
+        else if (data.updateType == "delete-video") {
+            console.log('User %s deleted video from session %s', userId, users[userId].sessionId)
+            let newQueue = deleteVideoFromSessionQueue(users[userId].sessionId, data.videoId)
+            callback({ videoQueue: newQueue });
+        }
     })
 
     // delete user of user list; if there are no users left in session, delete the session
