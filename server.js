@@ -81,7 +81,7 @@ io.on('connection', function(socket){
             id: sessionId,
             videoId: videoId,
             userIds: [newUserId],
-            avatars: [users[newUserID].avatar],
+            avatars: [users[newUserId].avatar],
             masterUser: master_user,
             recentUpdatedTime: currentTime, 
             recentPlayingState: playingState,
