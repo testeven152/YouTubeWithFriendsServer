@@ -194,6 +194,8 @@ io.on('connection', function(socket){
                 lodash.pull(sessions[users[newUserId].sessionId].avatars, oldAvatar)
                 sessions[users[newUserId].sessionId].avatars.push(users[newUserId].avatar);
 
+            } else {
+                console.log("User %s with no session changed avatar to %s", newUserId, newAvatar)
             }
         }
     }
@@ -253,7 +255,10 @@ io.on('connection', function(socket){
     //set sessionid to sessionid provided by user in client. 
     socket.on('joinSession', function(data, callback) {
         if (data.sessionId in sessions && addUserToSession(userId, data.sessionId)) {
-            let masterUserAvatar = (sessions[users[userId].sessionId].masterUser) ? users[sessions[users[userId].sessionId].masterUser].avatar : null
+
+            let masterUserId = sessions[users[userId].sessionId].masterUser
+            let masterUserAvatar = (masterUserId && masterUserId in sessions[users[userId].sessionId].userIds) ? users[masterUserId].avatar : null
+            
             callback({ 
                 sessionId: data.sessionId, 
                 videoId: sessions[data.sessionId].videoId,
